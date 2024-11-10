@@ -1,0 +1,130 @@
+ALMA STORE
+CREATE DATABASE ALMA STORE;
+USE ALMA STORE;
+
+(Admins)
+CREATE TABLE admins (
+    admin_id INT AUTO_INCREMENT PRIMARY KEY, -- المعرف الأساسي لكل مسؤول
+    username VARCHAR(50) NOT NULL,           -- اسم المستخدم
+    email VARCHAR(100) NOT NULL,             -- البريد الإلكتروني
+    password VARCHAR(255) NOT NULL,          -- كلمة المرور
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- تاريخ الإنشاء
+);
+
+-- جدول الفئات (Categories)
+CREATE TABLE categories (
+    category_id INT AUTO_INCREMENT PRIMARY KEY, -- المعرف الأساسي للفئة
+    name VARCHAR(50) NOT NULL,                  -- اسم الفئة
+    description TEXT,                           -- وصف الفئة
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- تاريخ الإنشاء
+);
+
+-- جدول الكوبونات (Coupons)
+CREATE TABLE coupons (
+    coupon_id INT AUTO_INCREMENT PRIMARY KEY,    -- المعرف الأساسي للكوبون
+    code VARCHAR(50) NOT NULL,                   -- رمز الكوبون
+    discount DECIMAL(5, 2) NOT NULL,             -- نسبة الخصم (مثال: 10.50 يعني خصم 10.5%)
+    expiry_date DATE,                            -- تاريخ انتهاء صلاحية الكوبون
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- تاريخ الإنشاء
+);
+
+-- جدول العملاء (Customers)
+CREATE TABLE customers (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,  -- المعرف الأساسي للعميل
+    name VARCHAR(100) NOT NULL,                  -- اسم العميل
+    email VARCHAR(100) NOT NULL,                 -- البريد الإلكتروني
+    password VARCHAR(255) NOT NULL,              -- كلمة المرور
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- تاريخ التسجيل
+);
+
+-- جدول الرسائل (Messages)
+CREATE TABLE messages (
+    message_id INT AUTO_INCREMENT PRIMARY KEY,   -- المعرف الأساسي للرسالة
+    customer_id INT,                             -- معرف العميل (علاقة بالعملاء)
+    subject VARCHAR(100) NOT NULL,               -- موضوع الرسالة
+    content TEXT NOT NULL,                       -- محتوى الرسالة
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- تاريخ الإرسال
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) -- علاقة مع جدول العملاء
+);
+
+-- جدول التحديثات والترقيات (Migrations)
+CREATE TABLE migrations (
+    migration_id INT AUTO_INCREMENT PRIMARY KEY, -- المعرف الأساسي للتحديث
+    migration VARCHAR(100) NOT NULL,             -- اسم التحديث
+    batch INT NOT NULL                           -- رقم الدفعة
+);
+
+-- جدول الطلبات (Orders)
+CREATE TABLE orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,      -- المعرف الأساسي للطلب
+    customer_id INT,                              -- معرف العميل (علاقة بالعملاء)
+    total_price DECIMAL(10, 2) NOT NULL,          -- السعر الإجمالي للطلب
+    status VARCHAR(50) DEFAULT 'Pending',         -- حالة الطلب (قيد التنفيذ، تم، ملغي)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- تاريخ الطلب
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) -- علاقة مع جدول العملاء
+);
+
+-- جدول المنتجات المطلوبة في الطلبات (Order_Products)
+CREATE TABLE order_products (
+    order_product_id INT AUTO_INCREMENT PRIMARY KEY, -- المعرف الأساسي لكل عنصر في الطلب
+    order_id INT,                                   -- معرف الطلب (علاقة بالطلبات)
+    product_id INT,                                 -- معرف المنتج (علاقة بالمنتجات)
+    quantity INT NOT NULL,                          -- الكمية المطلوبة
+    price DECIMAL(10, 2) NOT NULL,                  -- سعر المنتج
+    FOREIGN KEY (order_id) REFERENCES orders(order_id), -- علاقة مع جدول الطلبات
+    FOREIGN KEY (product_id) REFERENCES products(product_id) -- علاقة مع جدول المنتجات
+);
+
+-- جدول المنتجات (Products)
+CREATE TABLE products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,     -- المعرف الأساسي للمنتج
+    name VARCHAR(100) NOT NULL,                    -- اسم المنتج
+    description TEXT,                              -- وصف المنتج
+    price DECIMAL(10, 2) NOT NULL,                 -- السعر
+    stock_quantity INT DEFAULT 0,                  -- كمية المخزون
+    category_id INT,                               -- معرف الفئة (علاقة بالفئات)
+    image_url VARCHAR(255),                        -- رابط الصورة للمنتج
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- تاريخ الإضافة
+    FOREIGN KEY (category_id) REFERENCES categories(category_id) -- علاقة مع جدول الفئات
+);
+
+-- جدول المراجعات (Reviews)
+CREATE TABLE reviews (
+    review_id INT AUTO_INCREMENT PRIMARY KEY,     -- المعرف الأساسي للمراجعة
+    product_id INT,                               -- معرف المنتج (علاقة بالمنتجات)
+    customer_id INT,                              -- معرف العميل (علاقة بالعملاء)
+    rating INT CHECK (rating BETWEEN 1 AND 5),    -- التقييم من 1 إلى 5
+    comment TEXT,                                 -- التعليق
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- تاريخ المراجعة
+    FOREIGN KEY (product_id) REFERENCES products(product_id), -- علاقة مع جدول المنتجات
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) -- علاقة مع جدول العملاء
+);
+
+-- جدول الشهادات (Testimonials)
+CREATE TABLE testimonials (
+    testimonial_id INT AUTO_INCREMENT PRIMARY KEY, -- المعرف الأساسي للشهادة
+    customer_id INT,                              -- معرف العميل (علاقة بالعملاء)
+    content TEXT NOT NULL,                        -- محتوى الشهادة
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- تاريخ الإضافة
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) -- علاقة مع جدول العملاء
+);
+
+-- جدول قائمة المفضلة (Wishlists)
+CREATE TABLE wishlists (
+    wishlist_id INT AUTO_INCREMENT PRIMARY KEY,   -- المعرف الأساسي للقائمة المفضلة
+    customer_id INT,                              -- معرف العميل (علاقة بالعملاء)
+    product_id INT,                               -- معرف المنتج (علاقة بالمنتجات)
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- تاريخ الإضافة
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id), -- علاقة مع جدول العملاء
+    FOREIGN KEY (product_id) REFERENCES products(product_id) -- علاقة مع جدول المنتجات
+);
+
+
+شرح للعلاقات:
+جدول messages يحتوي على عمود customer_id كمرجع إلى جدول customers، بحيث يمكن تخزين رسائل كل عميل.
+جدول orders يحتوي على عمود customer_id كمرجع لربط الطلبات بالعملاء.
+جدول order_products يرتبط بجدول orders وproducts بحيث يخزن كل منتج مضاف في الطلب مع الكمية.
+جدول products يحتوي على عمود category_id لربط كل منتج بفئة معينة.
+جدول reviews يحتوي على product_id وcustomer_id لربط التقييمات بالمنتجات والعملاء.
+جدول testimonials يحتوي على عمود customer_id لربط الشهادات بالعملاء.
+جدول wishlists يحتوي على customer_id وproduct_id لتخزين المنتجات التي أضافها العملاء إلى قائمة المفضلة.
